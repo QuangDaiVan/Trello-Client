@@ -1,3 +1,4 @@
+// đang xử lý gọi API ở phần này nên giao diện bị trống
 import axios from 'axios'
 import { API_ROOT } from '~/utils/constants'
 
