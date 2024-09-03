@@ -11,7 +11,7 @@ function Board() {
   useEffect(() => {
     // tạm thời fix cứng boardId, để flow chuẩn chỉnh
     // sau này sử dụng react-route-dom để lấy chuẩn boardId từ URL về
-    const boardId = '66d1dc1ddf2dd38b94419459'
+    const boardId = '66d6c125c080a87a1062aea2'
 
     // call API
     fetchBoardDetailsAPI(boardId).then((board) => {
