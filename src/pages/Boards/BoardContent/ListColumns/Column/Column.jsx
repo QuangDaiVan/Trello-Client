@@ -164,10 +164,11 @@ function Column({ column }) {
               gap: 1
             }}>
               <TextField
-                label="Enter card title"
+                label="Enter card title..."
                 type="text"
                 size='small'
                 variant='outlined'
+                data-no-dnd='true'
                 autoFocus
                 value={newCardTitle}
                 onChange={(e) => setNewCardTitle(e.target.value)}
