@@ -23,6 +23,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { useState } from 'react'
 import CloseIcon from '@mui/icons-material/Close'
 import TextField from '@mui/material/TextField'
+import { toast } from 'react-toastify'
 
 
 function Column({ column }) {
@@ -53,7 +54,7 @@ function Column({ column }) {
 
   const addNewCard = () => {
     if (!newCardTitle) {
-      // console.error('please enter column title')
+      toast.error('please enter column title', { position: 'bottom-right' })
       return
     }
     // gọi API tại đây
