@@ -4,6 +4,8 @@ import BoardBar from './BoardBar/BoardBar'
 import BoardContent from './BoardContent/BoardContent'
 import { useState, useEffect } from 'react'
 import { fetchBoardDetailsAPI, createNewColumnAPI, createNewCardAPI } from '~/apis'
+import { generatePlaceholderCard } from '~/utils/formatter'
+import { isEmpty } from 'lodash'
 
 function Board() {
   const [board, setBoard] = useState(null)
@@ -15,6 +17,13 @@ function Board() {
 
     // call API
     fetchBoardDetailsAPI(boardId).then((board) => {
+      // cần xử lý vấn đề kéo thả vào 1 column rỗng
+      board.columns.forEach(column => {
+        if (isEmpty(column.cards)) {
+          column.cards = [generatePlaceholderCard(column)]
+          column.cardOrderIds = [generatePlaceholderCard(column)._id]
+        }
+      })
       setBoard(board)
     })
   }, [])
@@ -26,7 +35,18 @@ function Board() {
       boardId: board._id
     })
 
+    // khi tạo column mới thì chưa có card, cần xử lý kéo thả vào 1 column rỗng
+    createdColumn.cards = [generatePlaceholderCard(createdColumn)]
+    createdColumn.cardOrderIds = [generatePlaceholderCard(createdColumn)._id]
+
+
     // cập nhật lại State Board
+    // phía FE tự làm đúng lại state data board ( thay vì phải gọi lại API fetchBoardDetailsAPI)
+    // lưu ý: tùy thuộc vào lựa chọn và đặc thù dự án
+    const newBoard = { ...board }
+    newBoard.columns.push(createdColumn)
+    newBoard.columnOrderIds.push(createdColumn._id)
+    setBoard(newBoard)
   }
 
   // func này có nhiệm vụ gọi API tạo mới card và làm lại dữ liệu State Board
@@ -37,6 +57,13 @@ function Board() {
     })
 
     // cập nhật lại State Board
+    const newBoard = { ...board }
+    const columnToUpdate = newBoard.columns.find(column => column._id === createdCard.columnId)
+    if (columnToUpdate) {
+      columnToUpdate.cards.push(createdCard)
+      columnToUpdate.cardOrderIds.push(createdCard._id)
+      setBoard(newBoard)
+    }
   }
 
   return (
