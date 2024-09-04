@@ -26,7 +26,7 @@ import TextField from '@mui/material/TextField'
 import { toast } from 'react-toastify'
 
 
-function Column({ column }) {
+function Column({ column, createNewCard }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: column._id,
     data: { ...column }
@@ -52,12 +52,20 @@ function Column({ column }) {
 
   const [newCardTitle, setNewCardTitle] = useState('')
 
-  const addNewCard = () => {
+  const addNewCard = async () => {
     if (!newCardTitle) {
       toast.error('please enter column title', { position: 'bottom-right' })
       return
     }
-    // gọi API tại đây
+
+    // Tạo dữ liệu Card để gọi API
+    const newCardData = {
+      title: newCardTitle,
+      columnId: column._id
+    }
+
+    //gọi lên props function createNewCard nằm ở component cha cao nhất (boards/_id.jsx)
+    await createNewCard(newCardData)
 
     // đóng trạng thái thêm column mới và clear input.
     toggleOpenNewCardForm()
