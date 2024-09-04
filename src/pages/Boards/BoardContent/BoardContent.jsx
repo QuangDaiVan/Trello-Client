@@ -190,7 +190,7 @@ function BoardContent({ board, createNewColumn, createNewCard }) {
     // kiểm tra nếu không tồn tại over, kéo linh tinh ra ngoài thì return luôn tránh lỗi
     if (!active || !over) return
 
-    // xử lý kéo thả card
+    // xử lý kéo thả cards
     if (activeDragItemIdType === ACTIVE_DRAG_ITEM_TYPE.CARD) {
       // activveDraggingCard: là cái card đang được kéo
       const { id: activeDraggingCardId, data: { current: activeDraggingCardData } } = active
