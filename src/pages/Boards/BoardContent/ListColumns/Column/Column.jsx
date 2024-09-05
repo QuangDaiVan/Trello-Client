@@ -17,7 +17,7 @@ import ContentPaste from '@mui/icons-material/ContentPaste'
 import AddCardIcon from '@mui/icons-material/AddCard'
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever'
 import ListCards from './ListCards/ListCards'
-import { mapOrder } from '~/utils/sorts'
+// import { mapOrder } from '~/utils/sorts'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useState } from 'react'
@@ -45,7 +45,9 @@ function Column({ column, createNewCard }) {
   const handleClick = (event) => { setAnchorEl(event.currentTarget) }
   const handleClose = () => { setAnchorEl(null) }
 
-  const orderedCards = mapOrder(column?.cards, column?.cardOrderIds, '_id')
+  // card đã được sắp xếp ở component cha cao nhất (boards/_id.jsx)
+  // const orderedCards = mapOrder(column?.cards, column?.cardOrderIds, '_id')
+  const orderedCards = column.cards
 
   const [openNewCardForm, setopenNewCardForm] = useState(false)
   const toggleOpenNewCardForm = () => setopenNewCardForm(!openNewCardForm)
