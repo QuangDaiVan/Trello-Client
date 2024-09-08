@@ -21,7 +21,6 @@ import { Typography } from '@mui/material'
 import { toast } from 'react-toastify'
 
 
-
 function Board() {
   const [board, setBoard] = useState(null)
 
