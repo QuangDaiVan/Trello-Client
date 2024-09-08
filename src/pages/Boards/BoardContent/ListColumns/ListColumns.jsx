@@ -9,7 +9,7 @@ import TextField from '@mui/material/TextField'
 import CloseIcon from '@mui/icons-material/Close'
 
 
-function ListColumns({ columns, createNewColumn, createNewCard }) {
+function ListColumns({ columns, createNewColumn, createNewCard, deleteColumnDetails }) {
   const [openNewColumnForm, setopenNewColumnForm] = useState(false)
   const toggleOpenNewColumnForm = () => setopenNewColumnForm(!openNewColumnForm)
 
@@ -51,7 +51,12 @@ function ListColumns({ columns, createNewColumn, createNewCard }) {
         {/* {columns?.map((column) => {
           return <Column key={column._id} />
         })} */}
-        {columns?.map(column => <Column key={column._id} column={column} createNewCard={createNewCard} />)}
+        {columns?.map(column => <Column
+          key={column._id}
+          column={column}
+          createNewCard={createNewCard}
+          deleteColumnDetails={deleteColumnDetails}
+        />)}
 
         {/* Box add new column */}
         {!openNewColumnForm
