@@ -122,7 +122,7 @@ export default function SignupPage() {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: 'background.default',
+          backgroundColor: '#0079bf',
         }}
       >
         <Container component="main" maxWidth="xs">
