@@ -1,11 +1,10 @@
 import React, { useState } from 'react'
-import { json, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { loginApi } from '~/apis/authAPI'
 
 import {
   Button,
   TextField,
-  Link,
   Box,
   Typography,
   Container,
@@ -13,6 +12,7 @@ import {
   createTheme,
   ThemeProvider,
   Paper,
+  Link
 } from '@mui/material';
 
 const theme = createTheme({
@@ -56,11 +56,9 @@ const theme = createTheme({
   },
 });
 
-export default function AuthPage() {
-  const [isSignUp, setIsSignUp] = useState(false)
+export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
 
   const navigate = useNavigate()
 
@@ -104,7 +102,7 @@ export default function AuthPage() {
             }}
           >
             <Typography component="h1" variant="h5" sx={{ mb: 3, fontWeight: 'bold', color: '#5e6c84' }}>
-              {isSignUp ? 'Đăng ký tài khoản Trello' : 'Đăng nhập vào Trello'}
+              Đăng nhập vào Trello
             </Typography>
             <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1, width: '100%' }}>
               <TextField
@@ -131,19 +129,6 @@ export default function AuthPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
-              {isSignUp && (
-                <TextField
-                  margin="normal"
-                  required
-                  fullWidth
-                  name="confirmPassword"
-                  label="Xác nhận mật khẩu"
-                  type="password"
-                  id="confirmPassword"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-              )}
               <Button
                 type="submit"
                 fullWidth
@@ -156,17 +141,15 @@ export default function AuthPage() {
                   py: 1.5,
                 }}
               >
-                {isSignUp ? 'Đăng ký' : 'Đăng nhập'}
+                Đăng nhập
               </Button>
               <Box sx={{ textAlign: 'center', mt: 2 }}>
-                <Link
-                  component="button"
-                  variant="body2"
-                  onClick={() => setIsSignUp(!isSignUp)}
-                  sx={{ color: 'primary.main', textDecoration: 'none' }}
-                >
-                  {isSignUp ? 'Đã có tài khoản? Đăng nhập' : 'Chưa có tài khoản? Đăng ký'}
-                </Link>
+                <Typography variant="body2" color="text.secondary">
+                  Chưa có tài khoản?{' '}
+                  <Link href='/register' variant="body2" sx={{ color: 'primary.main', textDecoration: 'none' }}>
+                    Đăng ký
+                  </Link>
+                </Typography>
               </Box>
             </Box>
           </Paper>
