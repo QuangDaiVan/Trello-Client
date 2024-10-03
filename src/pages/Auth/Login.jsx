@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { loginApi } from '~/apis/authAPI'
 
@@ -13,19 +13,19 @@ import {
   ThemeProvider,
   Paper,
   Link
-} from '@mui/material';
+} from '@mui/material'
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#0079bf',
+      main: '#0079bf'
     },
     secondary: {
-      main: '#5aac44',
+      main: '#5aac44'
     },
     background: {
-      default: '#0079bf',
-    },
+      default: '#0079bf'
+    }
   },
   components: {
     MuiTextField: {
@@ -33,28 +33,28 @@ const theme = createTheme({
         root: {
           '& .MuiOutlinedInput-root': {
             '& fieldset': {
-              borderColor: 'rgba(0, 0, 0, 0.23)',
+              borderColor: 'rgba(0, 0, 0, 0.23)'
             },
             '&:hover fieldset': {
-              borderColor: 'rgba(0, 0, 0, 0.87)',
+              borderColor: 'rgba(0, 0, 0, 0.87)'
             },
             '&.Mui-focused fieldset': {
-              borderColor: '#0079bf',
-            },
-          },
-        },
-      },
+              borderColor: '#0079bf'
+            }
+          }
+        }
+      }
     },
     MuiButton: {
       styleOverrides: {
         root: {
           textTransform: 'none',
-          fontWeight: 'bold',
-        },
-      },
-    },
-  },
-});
+          fontWeight: 'bold'
+        }
+      }
+    }
+  }
+})
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -63,14 +63,14 @@ export default function LoginPage() {
   const navigate = useNavigate()
 
   const handleSubmit = async (event) => {
-    event.preventDefault();
+    event.preventDefault()
     try {
       const { token, user } = await loginApi(email, password)
       localStorage.setItem('token', token)
       localStorage.setItem('user', JSON.stringify(user))
       navigate('/board')
     } catch (error) {
-      console.error('Login failed: ', error)
+      // console.error('Login failed: ', error)
     }
   }
 
@@ -86,7 +86,7 @@ export default function LoginPage() {
           backgroundColor: '#0079bf',
           backgroundImage: 'url("https://www.iconfinder.com/icons/1298768/trello_icon")',
           backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundPosition: 'center'
         }}
       >
         <Container component="main" maxWidth="xs">
@@ -98,7 +98,7 @@ export default function LoginPage() {
               flexDirection: 'column',
               alignItems: 'center',
               backgroundColor: 'white',
-              borderRadius: 2,
+              borderRadius: 2
             }}
           >
             <Typography component="h1" variant="h5" sx={{ mb: 3, fontWeight: 'bold', color: '#5e6c84' }}>
@@ -138,7 +138,7 @@ export default function LoginPage() {
                   mb: 2,
                   bgcolor: 'secondary.main',
                   '&:hover': { bgcolor: 'secondary.dark' },
-                  py: 1.5,
+                  py: 1.5
                 }}
               >
                 Đăng nhập
@@ -156,5 +156,5 @@ export default function LoginPage() {
         </Container>
       </Box>
     </ThemeProvider>
-  );
+  )
 }

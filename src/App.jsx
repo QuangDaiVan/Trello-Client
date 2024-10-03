@@ -5,7 +5,7 @@ import Board from '~/pages/Boards/_id'
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token')
-  if(!token) {
+  if (!token) {
     return <Navigate to='/login' replace />
   }
   return children

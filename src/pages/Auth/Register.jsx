@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { registerApi } from '~/apis/authAPI'
 
@@ -14,21 +14,21 @@ import {
   ThemeProvider,
   Paper,
   InputAdornment,
-  IconButton,
-} from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+  IconButton
+} from '@mui/material'
+import { Visibility, VisibilityOff } from '@mui/icons-material'
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#0079bf',
+      main: '#0079bf'
     },
     secondary: {
-      main: '#5aac44',
+      main: '#5aac44'
     },
     background: {
-      default: '#0079bf',
-    },
+      default: '#0079bf'
+    }
   },
   components: {
     MuiTextField: {
@@ -36,65 +36,65 @@ const theme = createTheme({
         root: {
           '& .MuiOutlinedInput-root': {
             '& fieldset': {
-              borderColor: 'rgba(0, 0, 0, 0.23)',
+              borderColor: 'rgba(0, 0, 0, 0.23)'
             },
             '&:hover fieldset': {
-              borderColor: 'rgba(0, 0, 0, 0.87)',
+              borderColor: 'rgba(0, 0, 0, 0.87)'
             },
             '&.Mui-focused fieldset': {
-              borderColor: '#0079bf',
-            },
-          },
-        },
-      },
+              borderColor: '#0079bf'
+            }
+          }
+        }
+      }
     },
     MuiButton: {
       styleOverrides: {
         root: {
           textTransform: 'none',
-          fontWeight: 'bold',
-        },
-      },
-    },
-  },
-});
+          fontWeight: 'bold'
+        }
+      }
+    }
+  }
+})
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
-    password: '',
-  });
-  const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState({});
+    password: ''
+  })
+  const [showPassword, setShowPassword] = useState(false)
+  const [errors, setErrors] = useState({})
 
   const handleChange = (event) => {
-    const { name, value } = event.target;
+    const { name, value } = event.target
     setFormData(prevData => ({
       ...prevData,
       [name]: value
-    }));
+    }))
     if (errors[name]) {
       setErrors(prevErrors => ({
         ...prevErrors,
         [name]: ''
-      }));
+      }))
     }
-  };
+  }
 
   const navigate = useNavigate()
 
   const handleSubmit = async (event) => {
-    event.preventDefault();
-    const newErrors = {};
-    if (!formData.username.trim()) newErrors.username = 'Tên là bắt buộc';
-    if (!formData.email.trim()) newErrors.email = 'Email là bắt buộc';
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email không hợp lệ';
-    if (!formData.password) newErrors.password = 'Mật khẩu là bắt buộc';
-    else if (formData.password.length < 8) newErrors.password = 'Mật khẩu phải có ít nhất 8 ký tự';
+    event.preventDefault()
+    const newErrors = {}
+    if (!formData.username.trim()) newErrors.username = 'Tên là bắt buộc'
+    if (!formData.email.trim()) newErrors.email = 'Email là bắt buộc'
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email không hợp lệ'
+    if (!formData.password) newErrors.password = 'Mật khẩu là bắt buộc'
+    else if (formData.password.length < 8) newErrors.password = 'Mật khẩu phải có ít nhất 8 ký tự'
 
     if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+      setErrors(newErrors)
     } else {
       try {
         const { token, user } = await registerApi(formData)
@@ -102,15 +102,15 @@ export default function SignupPage() {
         localStorage.setItem('user', JSON.stringify(user))
         navigate('/board')
       } catch (error) {
-        console.error('Registration failed: ', error)
-        setErrors({ submit: 'Registration failed. Please try again.' });
+        // console.error('Registration failed: ', error)
+        setErrors({ submit: 'Registration failed. Please try again.' })
       }
     }
-  };
+  }
 
   const toggleShowPassword = () => {
-    setShowPassword(!showPassword);
-  };
+    setShowPassword(!showPassword)
+  }
 
   return (
     <ThemeProvider theme={theme}>
@@ -122,7 +122,7 @@ export default function SignupPage() {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: '#0079bf',
+          backgroundColor: '#0079bf'
         }}
       >
         <Container component="main" maxWidth="xs">
@@ -134,7 +134,7 @@ export default function SignupPage() {
               flexDirection: 'column',
               alignItems: 'center',
               backgroundColor: 'white',
-              borderRadius: 2,
+              borderRadius: 2
             }}
           >
             <Typography component="h1" variant="h5" sx={{ mb: 3, fontWeight: 'bold', color: '#5e6c84' }}>
@@ -194,7 +194,7 @@ export default function SignupPage() {
                         {showPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
                     </InputAdornment>
-                  ),
+                  )
                 }}
                 inputProps={{ maxLength: 100 }}
               />
@@ -212,7 +212,7 @@ export default function SignupPage() {
                   mb: 2,
                   bgcolor: 'secondary.main',
                   '&:hover': { bgcolor: 'secondary.dark' },
-                  py: 1.5,
+                  py: 1.5
                 }}
               >
                 Đăng ký
@@ -230,5 +230,5 @@ export default function SignupPage() {
         </Container>
       </Box>
     </ThemeProvider>
-  );
+  )
 }
