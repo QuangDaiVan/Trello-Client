@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import Login from '~/pages/Auth/Login'
 import Register from '~/pages/Auth/Register'
 import Board from '~/pages/Boards/_id'
+import HomePage from '~/pages/HomePage/HomePage' 
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token')
@@ -22,6 +23,7 @@ function App() {
             <Board />
           </ProtectedRoute>
         }> </Route>
+        <Route path='/homepage' element={<HomePage />}></Route>
         <Route path='/' element={<Navigate to='/login' replace />}></Route>
       </Routes>
     </Router>

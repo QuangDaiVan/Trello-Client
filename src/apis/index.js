@@ -61,3 +61,4 @@ export const createNewCardAPI = async (newCardData) => {
   const response = await api.post('/v1/cards', newCardData)
   return response.data
 }
+
