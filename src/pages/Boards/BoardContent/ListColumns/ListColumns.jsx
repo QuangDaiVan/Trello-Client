@@ -1,42 +1,87 @@
+
+import { useState } from 'react'
+import { toast } from 'react-toastify'
 import Box from '@mui/material/Box'
 import Column from './Column/Column'
 import Button from '@mui/material/Button'
 import NoteAddIcon from '@mui/icons-material/NoteAdd'
-import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable'
-import { useState } from 'react'
-import { toast } from 'react-toastify'
 import TextField from '@mui/material/TextField'
 import CloseIcon from '@mui/icons-material/Close'
+import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable'
+import { createNewColumnAPI } from '~/apis'
+import { generatePlaceholderCard } from '~/utils/formatters'
+import {
+  updateCurrentActiveBoard,
+  selectCurrentActiveBoard
+} from '~/redux/activeBoard/activeBoardSlice'
+import { useDispatch, useSelector } from 'react-redux'
+import { cloneDeep } from 'lodash'
 
+function ListColumns({ columns }) {
+  const dispatch = useDispatch()
+  const board = useSelector(selectCurrentActiveBoard)
 
-function ListColumns({ columns, createNewColumn, createNewCard, deleteColumnDetails }) {
-  const [openNewColumnForm, setopenNewColumnForm] = useState(false)
-  const toggleOpenNewColumnForm = () => setopenNewColumnForm(!openNewColumnForm)
+  const [openNewColumnForm, setOpenNewColumnForm] = useState(false)
+  const toggleOpenNewColumnForm = () => setOpenNewColumnForm(!openNewColumnForm)
 
   const [newColumnTitle, setNewColumnTitle] = useState('')
 
   const addNewColumn = async () => {
     if (!newColumnTitle) {
-      toast.error('please enter column title')
+      toast.error('Please enter Column Title!')
       return
     }
+
     // Tạo dữ liệu Column để gọi API
     const newColumnData = {
       title: newColumnTitle
     }
 
-    //gọi lên props function createNewColumn nằm ở component cha cao nhất (boards/_id.jsx)
-    await createNewColumn(newColumnData)
+    // Gọi API tạo mới Column và làm lại dữ liệu State Board
+    const createdColumn = await createNewColumnAPI({
+      ...newColumnData,
+      boardId: board._id
+    })
 
-    // đóng trạng thái thêm column mới và clear input.
+    // Khi tạo column mới thì nó sẽ chưa có card, cần xử lý vấn đề kéo thả vào một column rỗng (Nhớ lại video 37.2, code hiện tại là video 69)
+    createdColumn.cards = [generatePlaceholderCard(createdColumn)]
+    createdColumn.cardOrderIds = [generatePlaceholderCard(createdColumn)._id]
+
+    // Cập nhật state board
+    // Phía Front-end chúng ta phải tự làm đúng lại state data board (thay vì phải gọi lại api fetchBoardDetailsAPI)
+    // Lưu ý: cách làm này phụ thuộc vào tùy lựa chọn và đặc thù dự án, có nơi thì BE sẽ hỗ trợ trả về luôn toàn bộ Board dù đây có là api tạo Column hay Card đi chăng nữa. => Lúc này FE sẽ nhàn hơn.
+
+    /**
+    * Đoạn này sẽ dính lỗi object is not extensible bởi dù đã copy/clone ra giá trị newBoard nhưng bản chất của spread operator là Shallow Copy/Clone, nên dính phải rules Immutability trong Redux Toolkit không dùng được hàm PUSH (sửa giá trị mảng trực tiếp), cách đơn giản nhanh gọn nhất ở trường hợp này của chúng ta là dùng tới Deep Copy/Clone toàn bộ cái Board cho dễ hiểu và code ngắn gọn.
+    * https://redux-toolkit.js.org/usage/immer-reducers
+    * Tài liệu thêm về Shallow và Deep Copy Object trong JS:
+    * https://www.javascripttutorial.net/object/3-ways-to-copy-objects-in-javascript/
+    */
+    // const newBoard = { ...board }
+    const newBoard = cloneDeep(board)
+    newBoard.columns.push(createdColumn)
+    newBoard.columnOrderIds.push(createdColumn._id)
+
+    /**
+    * Ngoài ra cách nữa là vẫn có thể dùng array.concat thay cho push như docs của Redux Toolkit ở trên vì push như đã nói nó sẽ thay đổi giá trị mảng trực tiếp, còn thằng concat thì nó merge - ghép mảng lại và tạo ra một mảng mới để chúng ta gán lại giá trị nên không vấn đề gì.
+    */
+    // const newBoard = { ...board }
+    // newBoard.columns = newBoard.columns.concat([createdColumn])
+    // newBoard.columnOrderIds = newBoard.columnOrderIds.concat([createdColumn._id])
+
+    // Cập nhật dữ liệu Board vào trong Redux Store
+    dispatch(updateCurrentActiveBoard(newBoard))
+
+    // Đóng trạng thái thêm Column mới & Clear Input
     toggleOpenNewColumnForm()
     setNewColumnTitle('')
   }
 
-  /*
-    thằng sortableContext yêu cầu item là 1 mảng dạng ['id-1', 'id-2'] chứ không phải [{id: 'id-1'}, {id:'id-2'}]
-    nếu không đúng thì kéo thả sẽ không có animation
-  */
+  /**
+   * Thằng SortableContext yêu cầu items là một mảng dạng ['id-1', 'id-2'] chứ không phải [{id: 'id-1'}, {id: 'id-2'}]
+   * Nếu không đúng thì vẫn kéo thả được nhưng không có animation
+   * https://github.com/clauderic/dnd-kit/issues/183#issuecomment-812569512
+   */
   return (
     <SortableContext items={columns?.map(c => c._id)} strategy={horizontalListSortingStrategy}>
       <Box sx={{
@@ -48,23 +93,17 @@ function ListColumns({ columns, createNewColumn, createNewCard, deleteColumnDeta
         overflowY: 'hidden',
         '&::-webkit-scrollbar-track': { m: 2 }
       }}>
-        {/* {columns?.map((column) => {
-          return <Column key={column._id} />
-        })} */}
-        {columns?.map(column => <Column
-          key={column._id}
-          column={column}
-          createNewCard={createNewCard}
-          deleteColumnDetails={deleteColumnDetails}
-        />)}
+        {columns?.map(column =>
+          <Column key={column._id} column={column} />
+        )}
 
-        {/* Box add new column */}
+        {/* Box Add new column CTA */}
         {!openNewColumnForm
           ? <Box onClick={toggleOpenNewColumnForm} sx={{
             minWidth: '250px',
             maxWidth: '250px',
-            borderRadius: '6px',
             mx: 2,
+            borderRadius: '6px',
             height: 'fit-content',
             bgcolor: '#ffffff3d'
           }}>
@@ -94,10 +133,10 @@ function ListColumns({ columns, createNewColumn, createNewCard, deleteColumnDeta
             gap: 1
           }}>
             <TextField
-              label="Enter column title"
+              label="Enter column title..."
               type="text"
-              size='small'
-              variant='outlined'
+              size="small"
+              variant="outlined"
               autoFocus
               value={newColumnTitle}
               onChange={(e) => setNewColumnTitle(e.target.value)}
@@ -105,20 +144,18 @@ function ListColumns({ columns, createNewColumn, createNewCard, deleteColumnDeta
                 '& label': { color: 'white' },
                 '& input': { color: 'white' },
                 '& label.Mui-focused': { color: 'white' },
-                '& .MuiTextField-root': {
+                '& .MuiOutlinedInput-root': {
                   '& fieldset': { borderColor: 'white' },
                   '&:hover fieldset': { borderColor: 'white' },
                   '&.Mui-focused fieldset': { borderColor: 'white' }
-
                 }
               }}
             />
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Button
+                className="interceptor-loading"
                 onClick={addNewColumn}
-                variant='contained'
-                color='success'
-                size='small'
+                variant="contained" color="success" size="small"
                 sx={{
                   boxShadow: 'none',
                   border: '0.5px solid',
@@ -127,13 +164,14 @@ function ListColumns({ columns, createNewColumn, createNewCard, deleteColumnDeta
                 }}
               >Add Column</Button>
               <CloseIcon
-                fontSize='small'
-                onClick={toggleOpenNewColumnForm}
+                fontSize="small"
                 sx={{
                   color: 'white',
                   cursor: 'pointer',
                   '&:hover': { color: (theme) => theme.palette.warning.light }
-                }} />
+                }}
+                onClick={toggleOpenNewColumnForm}
+              />
             </Box>
           </Box>
         }

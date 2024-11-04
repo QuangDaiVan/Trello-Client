@@ -1,63 +1,71 @@
+import { useState } from 'react'
+import { toast } from 'react-toastify'
 import Box from '@mui/material/Box'
-import Typography from '@mui/material/Typography'
+import Button from '@mui/material/Button'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
-import Tooltip from '@mui/material/Tooltip'
-import Button from '@mui/material/Button'
-import DragHandleIcon from '@mui/icons-material/DragHandle'
 import Divider from '@mui/material/Divider'
 import ListItemText from '@mui/material/ListItemText'
 import ListItemIcon from '@mui/material/ListItemIcon'
 import ContentCut from '@mui/icons-material/ContentCut'
-import Cloud from '@mui/icons-material/Cloud'
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import React from 'react'
 import ContentCopy from '@mui/icons-material/ContentCopy'
 import ContentPaste from '@mui/icons-material/ContentPaste'
-import AddCardIcon from '@mui/icons-material/AddCard'
+import Cloud from '@mui/icons-material/Cloud'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import Tooltip from '@mui/material/Tooltip'
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever'
+import AddCardIcon from '@mui/icons-material/AddCard'
+import DragHandleIcon from '@mui/icons-material/DragHandle'
 import ListCards from './ListCards/ListCards'
-// import { mapOrder } from '~/utils/sorts'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { useState } from 'react'
-import CloseIcon from '@mui/icons-material/Close'
 import TextField from '@mui/material/TextField'
-import { toast } from 'react-toastify'
+import CloseIcon from '@mui/icons-material/Close'
 import { useConfirm } from 'material-ui-confirm'
+import { createNewCardAPI, deleteColumnDetailsAPI, updateColumnDetailsAPI } from '~/apis'
+import {
+  updateCurrentActiveBoard,
+  selectCurrentActiveBoard
+} from '~/redux/activeBoard/activeBoardSlice'
+import { useDispatch, useSelector } from 'react-redux'
+import { cloneDeep } from 'lodash'
+import ToggleFocusInput from '~/components/Form/ToggleFocusInput'
 
+function Column({ column }) {
+  const dispatch = useDispatch()
+  const board = useSelector(selectCurrentActiveBoard)
 
-function Column({ column, createNewCard, deleteColumnDetails }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: column._id,
     data: { ...column }
   })
-
   const dndKitColumnStyles = {
-    touchAction: 'none',
+    // touchAction: 'none', // Dành cho sensor default dạng PointerSensor
+    // Nếu sử dụng CSS.Transform như docs sẽ lỗi kiểu stretch
+    // https://github.com/clauderic/dnd-kit/issues/117
     transform: CSS.Translate.toString(transform),
     transition,
+    // Chiều cao phải luôn max 100% vì nếu không sẽ lỗi lúc kéo column ngắn qua một cái column dài thì phải kéo ở khu vực giữa giữa rất khó chịu (demo ở video 32). Lưu ý lúc này phải kết hợp với {...listeners} nằm ở Box chứ không phải ở div ngoài cùng để tránh trường hợp kéo vào vùng xanh.
     height: '100%',
     opacity: isDragging ? 0.5 : undefined
   }
 
-  const [anchorEl, setAnchorEl] = React.useState(null)
+  const [anchorEl, setAnchorEl] = useState(null)
   const open = Boolean(anchorEl)
-  const handleClick = (event) => { setAnchorEl(event.currentTarget) }
-  const handleClose = () => { setAnchorEl(null) }
+  const handleClick = (event) => setAnchorEl(event.currentTarget)
+  const handleClose = () => setAnchorEl(null)
 
-  // card đã được sắp xếp ở component cha cao nhất (boards/_id.jsx)
-  // const orderedCards = mapOrder(column?.cards, column?.cardOrderIds, '_id')
+  // Cards đã được sắp xếp ở component cha cao nhất (boards/_id.jsx) (Video 71 đã giải thích lý do)
   const orderedCards = column.cards
 
-  const [openNewCardForm, setopenNewCardForm] = useState(false)
-  const toggleOpenNewCardForm = () => setopenNewCardForm(!openNewCardForm)
+  const [openNewCardForm, setOpenNewCardForm] = useState(false)
+  const toggleOpenNewCardForm = () => setOpenNewCardForm(!openNewCardForm)
 
   const [newCardTitle, setNewCardTitle] = useState('')
 
   const addNewCard = async () => {
     if (!newCardTitle) {
-      toast.error('please enter column title', { position: 'bottom-right' })
+      toast.error('Please enter Card Title!', { position: 'bottom-right' })
       return
     }
 
@@ -67,68 +75,104 @@ function Column({ column, createNewCard, deleteColumnDetails }) {
       columnId: column._id
     }
 
-    //gọi lên props function createNewCard nằm ở component cha cao nhất (boards/_id.jsx)
-    await createNewCard(newCardData)
+    // Gọi API tạo mới Card và làm lại dữ liệu State Board
+    const createdCard = await createNewCardAPI({
+      ...newCardData,
+      boardId: board._id
+    })
 
-    // đóng trạng thái thêm column mới và clear input.
+    // Cập nhật state board
+    // Phía Front-end chúng ta phải tự làm đúng lại state data board (thay vì phải gọi lại api fetchBoardDetailsAPI)
+    // Lưu ý: cách làm này phụ thuộc vào tùy lựa chọn và đặc thù dự án, có nơi thì BE sẽ hỗ trợ trả về luôn toàn bộ Board dù đây có là api tạo Column hay Card đi chăng nữa. => Lúc này FE sẽ nhàn hơn.
+
+    // Tương tự hàm createNewColumn nên chỗ này dùng cloneDeep
+    // const newBoard = { ...board }
+    const newBoard = cloneDeep(board)
+    const columnToUpdate = newBoard.columns.find(column => column._id === createdCard.columnId)
+    if (columnToUpdate) {
+      // Nếu column rỗng: bản chất là đang chứa một cái Placeholder card (Nhớ lại video 37.2, hiện tại là video 69)
+      if (columnToUpdate.cards.some(card => card.FE_PlaceholderCard)) {
+        columnToUpdate.cards = [createdCard]
+        columnToUpdate.cardOrderIds = [createdCard._id]
+      } else {
+        // Ngược lại Column đã có data thì push vào cuối mảng
+        columnToUpdate.cards.push(createdCard)
+        columnToUpdate.cardOrderIds.push(createdCard._id)
+      }
+    }
+    // setBoard(newBoard)
+    dispatch(updateCurrentActiveBoard(newBoard))
+
+    // Đóng trạng thái thêm Card mới & Clear Input
     toggleOpenNewCardForm()
     setNewCardTitle('')
   }
 
-  // Xử lý xóa 1 column và card bên trong nó
+  // Xử lý xóa một Column và Cards bên trong nó
   const confirmDeleteColumn = useConfirm()
   const handleDeleteColumn = () => {
     confirmDeleteColumn({
       title: 'Delete Column?',
-      description: 'This action will be permanently delete your Column and its Cards! Are you sure?',
-      // content:'not used',
+      description: 'This action will permanently delete your Column and its Cards! Are you sure?',
       confirmationText: 'Confirm',
-      cancellationText: 'Cancel',
+      cancellationText: 'Cancel'
+    }).then(() => {
+      // Update cho chuẩn dữ liệu state Board
 
-      // allowClose: false,
-      // dialogProps: { maxWidth: 'xs' },
-      // cancellationButtonProps: { color: 'inherit' }
-      // confirmationButtonProps: { color: 'secondary', variant: 'outlined' },
+      // Tương tự đoạn xử lý chỗ hàm moveColumns nên không ảnh hưởng Redux Toolkit Immutability gì ở đây cả.
+      const newBoard = { ...board }
+      newBoard.columns = newBoard.columns.filter(c => c._id !== column._id)
+      newBoard.columnOrderIds = newBoard.columnOrderIds.filter(_id => _id !== column._id)
+      // setBoard(newBoard)
+      dispatch(updateCurrentActiveBoard(newBoard))
 
-      // description:'phải nhập chữ QuangDaiVan thì mới confirm được',
-      // confirmationKeyword:'QuangDaiVan',
-      buttonOrder: ['confirm', 'cancel']
-    })
-      .then(() => {
-        //gọi lên props function deleteColumnDetails nằm ở component cha cao nhất (boards/_id.jsx)
-        deleteColumnDetails(column._id)
+      // Gọi API xử lý phía BE
+      deleteColumnDetailsAPI(column._id).then(res => {
+        toast.success(res?.deleteResult)
       })
-      .catch(() => { })
+    }).catch(() => { })
   }
 
+  const onUpdateColumnTitle = (newTitle) => {
+    // Gọi API update Column và xử lý dữ liệu board trong redux
+    updateColumnDetailsAPI(column._id, { title: newTitle }).then(() => {
+      const newBoard = cloneDeep(board)
+      const columnToUpdate = newBoard.columns.find(c => c._id === column._id)
+      if (columnToUpdate) columnToUpdate.title = newTitle
+
+      dispatch(updateCurrentActiveBoard(newBoard))
+    })
+  }
+
+  // Phải bọc div ở đây vì vấn đề chiều cao của column khi kéo thả sẽ có bug kiểu kiểu flickering (video 32)
   return (
-    <div ref={setNodeRef} style={dndKitColumnStyles}{...attributes}>
+    <div ref={setNodeRef} style={dndKitColumnStyles} {...attributes}>
       <Box
         {...listeners}
         sx={{
-          bgcolor: (theme) => (theme.palette.mode === 'dark' ? '#333643' : '#ebecf0'),
           minWidth: '300px',
           maxWidth: '300px',
+          bgcolor: (theme) => (theme.palette.mode === 'dark' ? '#333643' : '#ebecf0'),
           ml: 2,
           borderRadius: '6px',
           height: 'fit-content',
           maxHeight: (theme) => `calc(${theme.trello.boardContentHeight} - ${theme.spacing(5)})`
         }}
       >
+        {/* Box Column Header */}
         <Box sx={{
-          height: (theme) => theme.trello.columnHeaderHeigt,
+          height: (theme) => theme.trello.columnHeaderHeight,
           p: 2,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between'
-        }} >
-          <Typography variant='h6' sx={{
-            fontSize: '1rem',
-            fontWeight: 'bold',
-            cursor: 'pointer'
-          }}>
-            {column?.title}
-          </Typography>
+        }}>
+          <ToggleFocusInput
+            value={column?.title}
+            onChangedValue={onUpdateColumnTitle}
+            data-no-dnd="true"
+          />
+
           <Box>
             <Tooltip title="More options">
               <ExpandMoreIcon
@@ -159,7 +203,7 @@ function Column({ column, createNewCard, deleteColumnDetails }) {
                   }
                 }}
               >
-                <ListItemIcon><AddCardIcon className='add-card-icon' fontSize="small" /></ListItemIcon>
+                <ListItemIcon><AddCardIcon className="add-card-icon" fontSize="small" /></ListItemIcon>
                 <ListItemText>Add new card</ListItemText>
               </MenuItem>
               <MenuItem>
@@ -184,8 +228,8 @@ function Column({ column, createNewCard, deleteColumnDetails }) {
                   }
                 }}
               >
-                <ListItemIcon><DeleteForeverIcon className='delete-forever-icon' fontSize="small" /></ListItemIcon>
-                <ListItemText>Remove this column</ListItemText>
+                <ListItemIcon><DeleteForeverIcon className="delete-forever-icon" fontSize="small" /></ListItemIcon>
+                <ListItemText>Delete this column</ListItemText>
               </MenuItem>
               <MenuItem>
                 <ListItemIcon><Cloud fontSize="small" /></ListItemIcon>
@@ -194,11 +238,15 @@ function Column({ column, createNewCard, deleteColumnDetails }) {
             </Menu>
           </Box>
         </Box>
+
+        {/* List Cards */}
         <ListCards cards={orderedCards} />
+
+        {/* Box Column Footer */}
         <Box sx={{
-          height: (theme) => theme.trello.columnFooterHeigt,
+          height: (theme) => theme.trello.columnFooterHeight,
           p: 2
-        }} >
+        }}>
           {!openNewCardForm
             ? <Box sx={{
               height: '100%',
@@ -207,8 +255,8 @@ function Column({ column, createNewCard, deleteColumnDetails }) {
               justifyContent: 'space-between'
             }}>
               <Button startIcon={<AddCardIcon />} onClick={toggleOpenNewCardForm}>Add new card</Button>
-              <Tooltip title='Drag to move'>
-                <DragHandleIcon sx={{ cursor: 'poiter' }} />
+              <Tooltip title="Drag to move">
+                <DragHandleIcon sx={{ cursor: 'pointer' }} />
               </Tooltip>
             </Box>
             : <Box sx={{
@@ -220,10 +268,10 @@ function Column({ column, createNewCard, deleteColumnDetails }) {
               <TextField
                 label="Enter card title..."
                 type="text"
-                size='small'
-                variant='outlined'
-                data-no-dnd='true'
+                size="small"
+                variant="outlined"
                 autoFocus
+                data-no-dnd="true"
                 value={newCardTitle}
                 onChange={(e) => setNewCardTitle(e.target.value)}
                 sx={{
@@ -245,10 +293,9 @@ function Column({ column, createNewCard, deleteColumnDetails }) {
               />
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Button
+                  className="interceptor-loading"
                   onClick={addNewCard}
-                  variant='contained'
-                  color='success'
-                  size='small'
+                  variant="contained" color="success" size="small"
                   sx={{
                     boxShadow: 'none',
                     border: '0.5px solid',
@@ -257,12 +304,13 @@ function Column({ column, createNewCard, deleteColumnDetails }) {
                   }}
                 >Add</Button>
                 <CloseIcon
-                  fontSize='small'
-                  onClick={toggleOpenNewCardForm}
+                  fontSize="small"
                   sx={{
                     color: (theme) => theme.palette.warning.light,
                     cursor: 'pointer'
-                  }} />
+                  }}
+                  onClick={toggleOpenNewCardForm}
+                />
               </Box>
             </Box>
           }
