@@ -54,7 +54,6 @@ authorizedAxiosInstance.interceptors.response.use((response) => {
   // Do something with response error
   /* Mọi mã http status code nằm ngoài khoảng 200 - 299 sẽ là error và rơi vào đây */
 
-  // Kỹ thuật chặn spam click (xem kỹ mô tả ở file formatters chứa function)
   interceptorLoadingElements(false)
 
   /** Quan trọng: Xử lý Refresh Token tự động */
@@ -70,7 +69,6 @@ authorizedAxiosInstance.interceptors.response.use((response) => {
 
   // if (error.response?.status === 410 && !originalRequests._retry) {
   if (error.response?.status === 410 && originalRequests) {
-    // UPDATE THÊM: Có thể bỏ không cần thêm cái _retry giống như nhiều bài hướng dẫn khác trên mạng nữa vì chúng ta đang làm chuẩn với biến refreshTokenPromise ở trên rồi, nếu muốn hiểu rõ hơn thì có thể xem riêng phần này ở bộ JWT trên kênh của mình nhé, Link: https://www.youtube.com/playlist?list=PLP6tw4Zpj-RJwtNw9564QKFf93hWiDnR_
     // Gán thêm một giá trị _retry luôn = true trong khoảng thời gian chờ, đảm bảo việc refresh token này chỉ luôn gọi 1 lần tại 1 thời điểm (nhìn lại điều kiện if ngay phía trên)
     // originalRequests._retry = true
 
