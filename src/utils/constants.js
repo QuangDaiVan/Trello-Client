@@ -9,7 +9,7 @@ if (process.env.BUILD_MODE === 'dev') {
 
 // Môi trường Production sẽ cần api endpoint chuẩn của các bạn
 if (process.env.BUILD_MODE === 'production') {
-  apiRoot = 'https://trello-api-0gbu.onrender.com'
+  apiRoot = 'https://teamwork-trello-be.onrender.com'
 }
 // console.log('🚀 ~ file: constants.js:7 ~ apiRoot:', apiRoot)
 export const API_ROOT = apiRoot
