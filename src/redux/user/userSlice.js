@@ -25,7 +25,6 @@ export const loginUserAPI = createAsyncThunk(
   'user/loginUserAPI',
   async (data) => {
     const response = await authorizedAxiosInstance.post(`${API_ROOT}/v1/users/login`, data)
-    // Lưu ý: axios sẽ trả kết quả về qua property của nó là data
     return response.data
   }
 )

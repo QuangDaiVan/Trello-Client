@@ -1,5 +1,4 @@
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
-
 import Board from '~/pages/Boards/_id'
 import NotFound from '~/pages/404/NotFound'
 import Auth from '~/pages/Auth/Auth'
@@ -9,13 +8,12 @@ import { selectCurrentUser } from '~/redux/user/userSlice'
 import Settings from '~/pages/Settings/Settings'
 import Boards from '~/pages/Boards'
 
-/**
- * Giải pháp Clean Code trong việc xác định các route nào cần đăng nhập tài khoản xong thì mới cho truy cập
- * Sử dụng <Outlet /> của react-router-dom để hiển thị các Child Route (xem cách sử dụng trong App() bên dưới)
- * https://reactrouter.com/en/main/components/outlet
- * Một bài hướng dẫn khá đầy đủ:
- * https://www.robinwieruch.de/react-router-private-routes/
- */
+// Giải pháp Clean Code trong việc xác định các route nào cần đăng nhập tài khoản xong thì mới cho truy cập
+// Sử dụng <Outlet /> của react-router-dom để hiển thị các Child Route (xem cách sử dụng trong App() bên dưới)
+// https://reactrouter.com/en/main/components/outlet
+// Một bài hướng dẫn khá đầy đủ:
+// https://www.robinwieruch.de/react-router-private-routes/
+
 const ProtectedRoute = ({ user }) => {
   // console.log(user)
   if (!user) return <Navigate to='/login' replace={true} />
